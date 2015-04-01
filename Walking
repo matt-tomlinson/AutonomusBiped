@@ -1,0 +1,142 @@
+#include <Wire.h>
+#include <Adafruit_PWMServoDriver.h>
+Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
+
+#define SERVOMIN  150 // this is the 'minimum' pulse length count (out of 4096)
+#define SERVOMAX  600 // this is the 'maximum' pulse length count (out of 4096)
+#define SERVOMID  (SERVOMAX + SERVOMIN)/2
+
+#define Lankle   12
+#define Lknee    13
+#define Lhip     14
+#define Rankle   0
+#define Rknee    1
+#define Rhip     2
+
+#define LankleC  SERVOMID - 10
+#define LkneeC   SERVOMID + 15
+#define LhipC    SERVOMID - 15
+#define RankleC  SERVOMID - 20
+#define RkneeC   SERVOMID - 20
+#define RhipC    SERVOMID
+
+#define Vdelay   30
+
+uint8_t servonum = 0;
+
+void stanceCalibrate() {
+  pwm.setPWM(Lankle, 0, LankleC);
+  pwm.setPWM(Lknee, 0, LkneeC - 100);
+  pwm.setPWM(Lhip, 0, LhipC - 100);
+  pwm.setPWM(Rankle, 0, RankleC);
+  pwm.setPWM(Rknee, 0, RkneeC + 100);
+  pwm.setPWM(Rhip, 0, RhipC + 100);
+}
+
+void rigidCalibrate(){
+  pwm.setPWM(Lankle, 0, LankleC);
+  pwm.setPWM(Lknee, 0, LkneeC);
+  pwm.setPWM(Lhip, 0, LhipC);
+  pwm.setPWM(Rankle, 0, RankleC);
+  pwm.setPWM(Rknee, 0, RkneeC);
+  pwm.setPWM(Rhip, 0, RhipC);
+}
+
+void setup() {
+  Serial.begin(9600);
+  Serial.println("Joints test!");
+
+  pwm.begin();
+  
+  pwm.setPWMFreq(60);  // Analog servos run at ~60 Hz updates
+  
+  rigidCalibrate();
+  
+  for (uint16_t i = 0; i < 50; i++) {
+    pwm.setPWM(Lankle, 0, LankleC + i);
+    pwm.setPWM(Rankle, 0, RankleC + i*3);
+    delay(Vdelay);
+  }
+  for (uint16_t i = 0; i < 25; i++) {
+    pwm.setPWM(Lankle, 0, LankleC + 50 + i);
+    delay(Vdelay);
+  }
+  delay(500);
+}
+
+void setServoPulse(uint8_t n, double pulse) {
+  double pulselength;
+  
+  pulselength = 1000000;   // 1,000,000 us per second
+  pulselength /= 60;   // 60 Hz
+  Serial.print(pulselength); Serial.println(" us per period"); 
+  pulselength /= 4096;  // 12 bits of resolution
+  Serial.print(pulselength); Serial.println(" us per bit"); 
+  pulse *= 1000;
+  pulse /= pulselength;
+  Serial.println(pulse);
+  pwm.setPWM(n, 0, pulse);
+}
+
+void loop() {
+  
+  for (uint16_t i = 0; i < 50; i++) {
+    pwm.setPWM(Rknee, 0, RkneeC - i);
+    pwm.setPWM(Rhip, 0, RhipC - i);
+    pwm.setPWM(Lknee, 0, LkneeC - i);
+    pwm.setPWM(Lhip, 0, LhipC - i);
+    delay(Vdelay);
+  }
+  delay(50);
+  
+  for (uint16_t i = 25; i > 0; i--) {
+    pwm.setPWM(Lankle, 0, LankleC + 50 + i);
+    delay(Vdelay);
+  }
+  for (uint16_t i = 50; i > 0; i--) {
+    pwm.setPWM(Lankle, 0, LankleC + i);
+    pwm.setPWM(Rankle, 0, RankleC + i*3);
+    delay(Vdelay);
+  }
+  for (uint16_t i = 0; i < 50; i++) {
+    pwm.setPWM(Lankle, 0, LankleC - i*3);
+    pwm.setPWM(Rankle, 0, RankleC - i);
+    delay(Vdelay);
+  }
+  for (uint16_t i = 0; i < 25; i++) {
+    pwm.setPWM(Lankle, 0, LankleC - i*3);
+    pwm.setPWM(Rankle, 0, RankleC - i);
+    delay(Vdelay);
+  }
+  delay(50);
+  
+  for (uint16_t i = 0; i < 100; i++) {
+    pwm.setPWM(Rknee, 0, RkneeC - 50 + i);
+    pwm.setPWM(Rhip, 0, RhipC - 50 + i);
+    pwm.setPWM(Lknee, 0, LkneeC - 50 + i);
+    pwm.setPWM(Lhip, 0, LhipC - 50 + i);
+    delay(Vdelay);
+  }
+  delay(50);
+  
+  for (uint16_t i = 50; i > 0; i--) {
+    pwm.setPWM(Lankle, 0, LankleC - i*3);
+    pwm.setPWM(Rankle, 0, RankleC - i);
+    delay(Vdelay);
+  }
+  for (uint16_t i = 0; i < 50; i++) {
+    pwm.setPWM(Lankle, 0, LankleC + i);
+    pwm.setPWM(Rankle, 0, RankleC + i*3);
+    delay(Vdelay);
+  }
+  delay(50);
+  
+  for (uint16_t i = 0; i < 50; i++) {
+    pwm.setPWM(Rknee, 0, RkneeC + 50 - i);
+    pwm.setPWM(Rhip, 0, RhipC + 50 - i);
+    pwm.setPWM(Lknee, 0, LkneeC + 50 - i);
+    pwm.setPWM(Lhip, 0, LhipC + 50 - i);
+    delay(Vdelay);
+  }
+
+}
